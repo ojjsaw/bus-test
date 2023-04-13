@@ -30,7 +30,7 @@ async def main():
     workitems_config = nats.js.api.StreamConfig(
         name=PROLONGED_STREAM,
         retention=nats.js.api.RetentionPolicy.WORK_QUEUE,
-        max_age=3600,
+        max_age=3600, #60min
         storage=nats.js.api.StorageType.FILE,
         discard=nats.js.api.DiscardPolicy.OLD,
         subjects=[PROLONGED_TOPIC]
@@ -39,20 +39,34 @@ async def main():
     progress_config = nats.js.api.StreamConfig(
         name=PROGRESS_STREAM,
         retention=nats.js.api.RetentionPolicy.WORK_QUEUE,
-        max_age=3600,
+        max_age=3600, #60min
         storage=nats.js.api.StorageType.FILE,
         discard=nats.js.api.DiscardPolicy.OLD,
         subjects=[PROGRESS_SUBJECTS]
     )
-    consumer_config = nats.js.api.ConsumerConfig(inactive_threshold=0.1,
-                                                 durable_name="scheduler",
-                                                 filter_subject=PROLONGED_TOPIC,
-                                                 deliver_group="worker")
 
+    # progress_source = nats.js.api.StreamSource(
+    #     name=PROGRESS_STREAM,
+    #     filter_subject=PROGRESS_SUBJECTS
+    # )
+    # prolonged_source = nats.js.api.StreamSource(
+    #     name=PROLONGED_STREAM,
+    #     filter_subject=PROLONGED_TOPIC
+    # )
+
+    # archive_config = nats.js.api.StreamConfig(
+    #     name="archive",
+    #     retention=nats.js.api.RetentionPolicy.INTEREST,
+    #     max_age=3600, #60min
+    #     storage=nats.js.api.StorageType.FILE,
+    #     discard=nats.js.api.DiscardPolicy.OLD,
+    #     sources= [progress_source, prolonged_source]
+    # )
+   
     await js_client.add_stream(config=workitems_config)
     await js_client.add_stream(config=progress_config)
-    await js_client.add_consumer(stream=PROLONGED_STREAM, config=consumer_config)
-
+    #await js_client.add_stream(config=archive_config)
+    
     psub = await js_client.pull_subscribe(subject=PROLONGED_TOPIC,
                                    durable="scheduler",
                                    stream=PROLONGED_STREAM)

@@ -27,8 +27,6 @@ async def main():
     nats_client = await nats.connect("localhost")
     js_client = nats_client.jetstream()
 
-    consumer_config = nats.js.api.ConsumerConfig(inactive_threshold=0.1)
-
     while True:
         operation = input("Enter 's' to submit, 'p' for progress, or 'q' to quit: ")
 
@@ -51,20 +49,26 @@ async def main():
             task_id = items[0]
             logging.info("Retrieving task(%s) for user(%s) ...", task_id, user_id)
             response_topic = "dlwb.progress." + user_id + "." + task_id
+            durable_id = user_id + "-" + task_id
+            #consumer_config = nats.js.api.ConsumerConfig(deliver_policy=nats.js.api.DeliverPolicy.NEW)
             psub = await js_client.pull_subscribe(subject=response_topic,
-                                                  durable=str(uuid.uuid4()),
-                                                  config=consumer_config,
+                                                  durable=durable_id,
+                                                  #config=consumer_config,
                                                   stream=PROGRESS_STREAM)
+            status = DlwbStatus.QUEUED
             try:
                 msgs = await psub.fetch(batch=100, timeout=0.1)
                 for msg in msgs:
                     await msg.ack()
                     data = json.loads(msg.data.decode())
+                    status = data["status"]
                     logging.info(data)
                 await psub.unsubscribe()
             except TimeoutError:
                 await psub.unsubscribe()
-                continue
+            
+            if status == DlwbStatus.COMPLETED or status == DlwbStatus.ERROR:
+                await js_client.delete_consumer(PROGRESS_STREAM, durable_id)
 
     await nats_client.close()
 

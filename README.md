@@ -9,3 +9,14 @@ clear && python worker.py
 clear && python ms.py
 
 ```
+
+```
+nats s add archive --source progress --source workitems --retention=work --max-age=60m
+
+nats s add progress-mirror --mirror progress
+nats s add workitems-mirror --mirror workitems
+
+nats sub dlwb.workitems
+nats sub dlwb.progress.*.*
+
+```
