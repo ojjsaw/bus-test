@@ -8,6 +8,17 @@ clear && docker run --rm -it --network=host nats:latest -js
 clear && python worker.py
 clear && python ms.py
 
+500 lines download
+30 lines convert
+500 lines benchmark max (detailed counters + benchmark results)
+
+less than 1MB for detailed counters in single message
+500 lines max
+
+benchmark_app -m /workspaces/bus-test/public/aclnet/FP32/aclnet.xml -d CPU -t 5
+benchmark_app -m /workspaces/bus-test/public/aclnet/FP32/aclnet.xml -d CPU -t 5 --report_type detailed_counters
+
+sudo apt-get update && export DEBIAN_FRONTEND=noninteractive && sudo apt-get -y install --no-install-recommends libgl1
 ```
 
 ```
@@ -16,7 +27,6 @@ nats s add archive --source progress --source workitems --retention=work --max-a
 nats s add progress-mirror --mirror progress
 nats s add workitems-mirror --mirror workitems
 
-nats sub dlwb.workitems
-nats sub dlwb.progress.*.*
+nats sub "dlwb.>"
 
 ```

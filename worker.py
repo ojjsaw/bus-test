@@ -38,34 +38,15 @@ async def main():
 
     progress_config = nats.js.api.StreamConfig(
         name=PROGRESS_STREAM,
-        retention=nats.js.api.RetentionPolicy.WORK_QUEUE,
-        max_age=3600, #60min
+        retention=nats.js.api.RetentionPolicy.LIMITS,
+        max_age=300, #5min
         storage=nats.js.api.StorageType.FILE,
         discard=nats.js.api.DiscardPolicy.OLD,
         subjects=[PROGRESS_SUBJECTS]
     )
-
-    # progress_source = nats.js.api.StreamSource(
-    #     name=PROGRESS_STREAM,
-    #     filter_subject=PROGRESS_SUBJECTS
-    # )
-    # prolonged_source = nats.js.api.StreamSource(
-    #     name=PROLONGED_STREAM,
-    #     filter_subject=PROLONGED_TOPIC
-    # )
-
-    # archive_config = nats.js.api.StreamConfig(
-    #     name="archive",
-    #     retention=nats.js.api.RetentionPolicy.INTEREST,
-    #     max_age=3600, #60min
-    #     storage=nats.js.api.StorageType.FILE,
-    #     discard=nats.js.api.DiscardPolicy.OLD,
-    #     sources= [progress_source, prolonged_source]
-    # )
    
     await js_client.add_stream(config=workitems_config)
     await js_client.add_stream(config=progress_config)
-    #await js_client.add_stream(config=archive_config)
     
     psub = await js_client.pull_subscribe(subject=PROLONGED_TOPIC,
                                    durable="scheduler",
@@ -80,8 +61,8 @@ async def main():
                 user_id = data["user"]
                 logging.info("Received task(%s) from user(%s)", task_id, user_id)
                 response_topic = "dlwb.progress." + user_id + "." + task_id
-                for log_count in range(11):
-                    await asyncio.sleep(1)
+                for log_count in range(300):
+                    await asyncio.sleep(0.05)
                     result = str(log_count) + " [" + user_id + "]"
                     response_data = { "status": DlwbStatus.RUNNING, "result": result}
                     await js_client.publish(response_topic, json.dumps(response_data).encode())
