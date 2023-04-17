@@ -61,7 +61,7 @@ async def main():
                 user_id = data["user"]
                 logging.info("Received task(%s) from user(%s)", task_id, user_id)
                 response_topic = "dlwb.progress." + user_id + "." + task_id
-                for log_count in range(300):
+                for log_count in range(100):
                     await asyncio.sleep(0.05)
                     result = str(log_count) + " [" + user_id + "]"
                     response_data = { "status": DlwbStatus.RUNNING, "result": result}

@@ -7,6 +7,8 @@ sudo dpkg -i nats-0.0.35-amd64\ \(1\).deb
 clear && docker run --rm -it --network=host nats:latest -js
 clear && python worker.py
 clear && python ms.py
+clear && python ms2.py
+
 
 500 lines download
 30 lines convert
@@ -22,11 +24,5 @@ sudo apt-get update && export DEBIAN_FRONTEND=noninteractive && sudo apt-get -y 
 ```
 
 ```
-nats s add archive --source progress --source workitems --retention=work --max-age=60m
-
-nats s add progress-mirror --mirror progress
-nats s add workitems-mirror --mirror workitems
-
 nats sub "dlwb.>"
-
 ```
